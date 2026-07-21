@@ -418,6 +418,16 @@
           <span class="unit-suffix" data-suffix>in</span>
         </div>
       </div>
+      <div class="input-group">
+        <label>Panel Material
+          <span class="help" data-tip="Flat panel (floats in the groove): 1/4in plywood or MDF is standard. Raised panel: needs 3/4in stock so there's enough depth to shape the raised profile — 1/2in usually isn't thick enough to raise.">?</span>
+        </label>
+        <select id="panelThickness" onchange="calculate()">
+          <option value="0.25" selected>1/4in Plywood/MDF (flat panel)</option>
+          <option value="0.5">1/2in Plywood/MDF</option>
+          <option value="0.75">3/4in Plywood/MDF (raised panel)</option>
+        </select>
+      </div>
       <p style="font-size:0.78rem;color:var(--text-muted);margin:12px 0 0;">Results update automatically as you type.</p>
     </div>
 
@@ -769,6 +779,11 @@
     const totalBoardFeet = (totalLinIn * frameW) / 144;
     const totalPanelSqFt = (panelW * panelH * panelQty * doorCount) / 144;
     const totalPanelSqM = (panelW*MM/1000) * (panelH*MM/1000) * panelQty * doorCount;
+    const panelThickness = parseFloat(document.getElementById('panelThickness').value);
+    // ponytail: area-based sheet count (total panel area ÷ usable sheet area), not a real nesting/layout solver.
+    // Fine for small door panels; upgrade to a bin-packing layout if panels start running close to sheet width/length.
+    const SHEET_SQFT = 32; // 4x8 ft sheet
+    const sheetsNeeded = Math.ceil((totalPanelSqFt * 1.15) / SHEET_SQFT);
 
     // Hardware
     let hingesPerDoor = 2;
@@ -797,7 +812,8 @@
     document.getElementById('materialResults').innerHTML = `
       <div class="output-row"><span>Frame stock (+15% waste)</span><strong>${(totalLinFeet*1.15).toFixed(1)} ft<span class="alt">${(totalLinIn*1.15*MM/1000).toFixed(2)} m</span></strong></div>
       <div class="output-row"><span>Board feet (4/4 stock)</span><strong>${(totalBoardFeet*1.15).toFixed(2)} BF</strong></div>
-      <div class="output-row"><span>Panel material area</span><strong>${totalPanelSqFt.toFixed(2)} sq ft<span class="alt">${totalPanelSqM.toFixed(3)} m²</span></strong></div>`;
+      <div class="output-row"><span>Panel material area</span><strong>${totalPanelSqFt.toFixed(2)} sq ft<span class="alt">${totalPanelSqM.toFixed(3)} m²</span></strong></div>
+      <div class="output-row"><span>Sheet goods (4×8 ft, ${dim(panelThickness)})</span><strong>${sheetsNeeded} sheet${sheetsNeeded===1?'':'s'}</strong></div>`;
 
     // plain-text version for copy
     const line = (l, r) => `${l}: ${r}`;
@@ -819,6 +835,7 @@
       line('Frame stock', `${(totalLinFeet*1.15).toFixed(1)} ft`),
       line('Board feet', `${(totalBoardFeet*1.15).toFixed(2)} BF`),
       line('Panel area', `${totalPanelSqFt.toFixed(2)} sq ft`),
+      line(`Sheet goods (4x8ft, ${cleanDim(panelThickness)})`, `${sheetsNeeded} sheet${sheetsNeeded===1?'':'s'}`),
     ].filter(Boolean).join('\n');
 
     renderSVG(doorCount, panelLayout);
