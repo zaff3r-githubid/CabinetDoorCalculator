@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro Cabinet Door & Material Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-bg-2: #243244;
+      --accent: #38bdf8;
+      --accent-green: #4ade80;
+      --accent-amber: #fbbf24;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .container { max-width: 1150px; margin: 0 auto; }
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    h1 { color: var(--accent); margin: 0; font-size: 1.5rem; }
+    .topbar-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* Unit toggle */
+    .unit-toggle {
+      display: inline-flex;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .unit-toggle button {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+    .unit-toggle button.active {
+      background: var(--accent);
+      color: #0f172a;
+    }
+    .ghost-btn {
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .ghost-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 850px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .unit-suffix {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 26px;
+    }
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 8px;
+      border-radius: 6px;
+      width: 95px;
+      text-align: right;
+      font-size: 0.9rem;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    input.invalid { border-color: var(--danger); }
+    select { text-align: left; width: 150px; }
+    .stepper {
+      background: var(--card-bg-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 24px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      flex: none;
+    }
+    .stepper:hover { border-color: var(--accent); color: var(--accent); }
+    .input-wrap input[type="text"] { width: 78px; }
+    @media print { .stepper { display: none; } }
+
+    /* Tooltip helper icon */
+    .help {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text);
+      font-size: 0.65rem;
+      font-weight: bold;
+      cursor: help;
+      position: relative;
+    }
+    .help:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      bottom: 130%;
+      transform: translateX(-50%);
+      background: #020617;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      font-size: 0.72rem;
+      font-weight: normal;
+      white-space: normal;
+      width: 200px;
+      text-align: left;
+      z-index: 20;
+      line-height: 1.4;
+    }
+
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .preset-btn {
+      background: var(--card-bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+    .output-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 7px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.9rem;
+      gap: 10px;
+    }
+    .output-row:last-child { border-bottom: none; }
+    .output-row span { color: var(--text-muted); }
+    .output-row strong { color: var(--accent-green); text-align: right; }
+    .output-row .alt {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+    .diagram-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #020617;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      min-height: 240px;
+    }
+    .badge {
+      font-size: 0.7rem;
+      background: var(--card-bg-2);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: auto;
+    }
+    .warning {
+      background: rgba(248,113,113,0.12);
+      border: 1px solid var(--danger);
+      color: #fecaca;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .warning.show { display: block; }
+
+    /* Guide */
+    .guide-section { margin-top: 20px; }
+    .guide-section h2 { font-size: 1.15rem; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+    .guide-section h3 { color: var(--accent-green); font-size: 1rem; margin-top: 20px; }
+    .guide-section code {
+      background: #020617;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    details.guide-section > summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 1.15rem;
+      font-weight: 600;
+      padding: 8px 0;
+      list-style: none;
+    }
+    details.guide-section > summary::-webkit-details-marker { display: none; }
+    details.guide-section > summary::before { content: "▸ "; }
+    details.guide-section[open] > summary::before { content: "▾ "; }
+    .diagram-fig {
+      margin: 16px 0;
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .diagram-fig svg { width: 100%; max-width: 320px; height: auto; }
+    .diagram-fig.wide svg { max-width: 560px; }
+    .diagram-fig figcaption {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .guide-section ul { font-size: 0.88rem; }
+    .guide-section li { margin-bottom: 6px; }
+
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .card { border: 1px solid #ccc; background: #fff; }
+      .no-print, .topbar-controls, .diagram-container { display: none !important; }
+      h1, h2, .output-row strong, .accent { color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="topbar">
+    <h1>Pro Cabinet Door &amp; Material Calculator</h1>
+    <div class="topbar-controls no-print">
+      <div class="unit-toggle" id="unitToggle">
+        <button data-unit="imperial" class="active" onclick="setUnit('imperial')">Imperial (in)</button>
+        <button data-unit="metric" onclick="setUnit('metric')">Metric (mm)</button>
+      </div>
+      <button class="ghost-btn" onclick="copyResults()">Copy Cut List</button>
+      <button class="ghost-btn" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <!-- INPUTS PANEL -->
+    <div class="card">
+      <div class="presets no-print">
+        <button class="preset-btn" onclick="applyPreset('base')">Base door</button>
+        <button class="preset-btn" onclick="applyPreset('wall')">Wall pair</button>
+        <button class="preset-btn" onclick="applyPreset('tall')">Tall pantry</button>
+      </div>
+
+      <h2>1. Opening &amp; Style</h2>
+      <div class="input-group">
+        <label>Cabinet Style
+          <span class="help" data-tip="Overlay doors sit on top of the frame. Inset doors sit flush inside the opening.">?</span>
+        </label>
+        <select id="style" onchange="toggleOverlayVisibility(); calculate()">
+          <option value="overlay">Overlay</option>
+          <option value="inset">Inset</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Opening Width</label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="openingW" value="30" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Opening Height</label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="openingH" value="36" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+      <div class="input-group" id="overlayGroup">
+        <label>Overlay (per side)
+          <span class="help" data-tip="How far each door edge covers the frame. 1/2 in (12.7 mm) is common for partial overlay.">?</span>
+        </label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="overlay" value="0.5" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Gap / Clearance
+          <span class="help" data-tip="Center gap between a pair of doors, or the reveal around inset doors.">?</span>
+        </label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="gap" value="0.125" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+
+      <h2>2. Door Configuration</h2>
+      <div class="input-group">
+        <label>Number of Doors</label>
+        <select id="doorCount" onchange="calculate()">
+          <option value="1">1 Door</option>
+          <option value="2" selected>2 Doors (Pair)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Panel Layout</label>
+        <select id="panelLayout" onchange="calculate()">
+          <option value="single">Single Panel</option>
+          <option value="split">Vertical Split Panel</option>
+        </select>
+      </div>
+
+      <h2>3. Shaker Joinery Specs</h2>
+      <div class="input-group">
+        <label>Stile / Rail Width</label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="frameWidth" value="2.25" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Groove Depth</label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="grooveDepth" value="0.375" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Expansion Gap
+          <span class="help" data-tip="Room left for the panel to expand with humidity. Keep small: ~1/16 in (1.5 mm).">?</span>
+        </label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="expansion" value="0.0625" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin:12px 0 0;">Results update automatically as you type.</p>
+    </div>
+
+    <!-- OUTPUTS & DIAGRAM -->
+    <div>
+      <div class="warning" id="warningBox"></div>
+      <div class="output-grid">
+        <div class="card">
+          <h2>Finished Door Dimensions</h2>
+          <div id="finishedResults"></div>
+        </div>
+        <div class="card">
+          <h2>Hardware Needed</h2>
+          <div id="hardwareResults"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Shaker Cut List <span class="badge" id="cutListBadge">per door</span></h2>
+        <div id="cutListResults"></div>
+      </div>
+
+      <div class="card">
+        <h2>Material Estimate <span class="badge">total job</span></h2>
+        <div id="materialResults"></div>
+      </div>
+
+      <div class="card">
+        <h2>Visual Scale Layout</h2>
+        <div class="diagram-container">
+          <svg id="doorSVG" width="320" height="240" viewBox="0 0 320 240"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="card guide-section" open>
+    <summary>Cabinet door guide &amp; reference</summary>
+
+    <!-- ANATOMY -->
+    <h3>Anatomy of a 5-piece door</h3>
+    <p>Flat- and raised-panel doors are built from <strong>5 parts: 2 stiles, 2 rails, and 1 panel</strong>. Stiles run the full height; rails fit between them. Both carry a centered groove that captures the panel, letting it swell and shrink with humidity without cracking the frame.</p>
+    <figure class="diagram-fig">
+      <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg">
+        <!-- door outline -->
+        <rect x="40" y="15" width="220" height="200" fill="none" stroke="var(--accent)" stroke-width="2" rx="3"/>
+        <!-- stiles -->
+        <rect x="40" y="15" width="34" height="200" fill="rgba(56,189,248,0.18)"/>
+        <rect x="226" y="15" width="34" height="200" fill="rgba(56,189,248,0.18)"/>
+        <!-- rails -->
+        <rect x="74" y="15" width="152" height="34" fill="rgba(74,222,128,0.18)"/>
+        <rect x="74" y="181" width="152" height="34" fill="rgba(74,222,128,0.18)"/>
+        <!-- panel -->
+        <rect x="74" y="49" width="152" height="132" fill="rgba(148,163,184,0.12)"/>
+        <!-- labels -->
+        <text x="57" y="118" fill="var(--accent)" font-size="11" text-anchor="middle" transform="rotate(-90 57 118)">STILE</text>
+        <text x="243" y="118" fill="var(--accent)" font-size="11" text-anchor="middle" transform="rotate(-90 243 118)">STILE</text>
+        <text x="150" y="36" fill="var(--accent-green)" font-size="11" text-anchor="middle">RAIL</text>
+        <text x="150" y="203" fill="var(--accent-green)" font-size="11" text-anchor="middle">RAIL</text>
+        <text x="150" y="119" fill="var(--text-muted)" font-size="12" text-anchor="middle">PANEL</text>
+      </svg>
+      <figcaption>Two stiles, two rails, one floating panel.</figcaption>
+    </figure>
+
+    <!-- STYLES -->
+    <h3>Door styles &amp; how they fit the opening</h3>
+    <p>The style sets whether you <em>add</em> overlay or <em>subtract</em> clearance from the opening — so pick it first.</p>
+    <figure class="diagram-fig wide">
+      <svg viewBox="0 0 560 180" xmlns="http://www.w3.org/2000/svg">
+        <!-- INSET -->
+        <g>
+          <rect x="20" y="20" width="120" height="120" fill="#020617" stroke="var(--border)" stroke-width="2"/>
+          <rect x="34" y="34" width="92" height="92" fill="rgba(56,189,248,0.20)" stroke="var(--accent)" stroke-width="2"/>
+          <text x="80" y="163" fill="var(--text)" font-size="12" text-anchor="middle">Inset</text>
+          <text x="80" y="12" fill="var(--text-muted)" font-size="9" text-anchor="middle">flush, ~1/16" gap</text>
+        </g>
+        <!-- LIPPED -->
+        <g>
+          <rect x="160" y="20" width="120" height="120" fill="#020617" stroke="var(--border)" stroke-width="2"/>
+          <rect x="168" y="28" width="104" height="104" fill="rgba(251,191,36,0.18)" stroke="var(--accent-amber)" stroke-width="2"/>
+          <rect x="180" y="40" width="80" height="80" fill="#020617" stroke="var(--accent-amber)" stroke-width="1"/>
+          <text x="220" y="163" fill="var(--text)" font-size="12" text-anchor="middle">Lipped</text>
+          <text x="220" y="12" fill="var(--text-muted)" font-size="9" text-anchor="middle">rabbeted, ~3/8" overlay</text>
+        </g>
+        <!-- PARTIAL OVERLAY -->
+        <g>
+          <rect x="300" y="20" width="120" height="120" fill="#020617" stroke="var(--border)" stroke-width="2"/>
+          <rect x="312" y="32" width="96" height="96" fill="rgba(74,222,128,0.20)" stroke="var(--accent-green)" stroke-width="2"/>
+          <text x="360" y="163" fill="var(--text)" font-size="12" text-anchor="middle">Partial overlay</text>
+          <text x="360" y="12" fill="var(--text-muted)" font-size="9" text-anchor="middle">proud, ~1/2" overlap</text>
+        </g>
+        <!-- FULL OVERLAY -->
+        <g>
+          <rect x="440" y="20" width="120" height="120" fill="#020617" stroke="var(--border)" stroke-width="2"/>
+          <rect x="444" y="24" width="112" height="112" fill="rgba(74,222,128,0.28)" stroke="var(--accent-green)" stroke-width="2"/>
+          <text x="500" y="163" fill="var(--text)" font-size="12" text-anchor="middle">Full overlay</text>
+          <text x="500" y="12" fill="var(--text-muted)" font-size="9" text-anchor="middle">covers frame</text>
+        </g>
+      </svg>
+      <figcaption>Darker outer square = cabinet frame. Colored square = door.</figcaption>
+    </figure>
+    <ul>
+      <li><strong>Inset</strong> — sits flush inside the frame with a ~1/16" gap all around. <em>Subtract</em> clearance.</li>
+      <li><strong>Lipped</strong> — a rabbet around the edge lets it partially recess; overlays ~3/8".</li>
+      <li><strong>Partial overlay</strong> — sits proud, overlaps the frame ~1/2" per side (the app's default).</li>
+      <li><strong>Full overlay</strong> — covers the frame almost entirely, so no face frame shows.</li>
+    </ul>
+
+    <!-- MEASURING -->
+    <h3>Measuring the opening</h3>
+    <p>Measure the <strong>inside clear opening</strong> of the face frame, not the overall cabinet. Check width at top &amp; bottom and height on both sides; use the <strong>smaller</strong> reading if the frame is out of square. Then add overlay (or subtract clearance) to each edge.</p>
+
+    <!-- FORMULAS -->
+    <h3>The formulas</h3>
+    <ul>
+      <li><strong>Single overlay door:</strong> <code>Door W = Opening W + (2 × Overlay)</code>, <code>Door H = Opening H + (2 × Overlay)</code></li>
+      <li><strong>Double (pair) overlay:</strong> <code>Door W = [(Opening W + 2×Overlay) − Center Gap] ÷ 2</code></li>
+      <li><strong>Inset single:</strong> <code>Door W = Opening W − (2 × Clearance)</code></li>
+      <li><strong>Rail length:</strong> <code>Door W − (2 × Stile W) + (2 × Groove Depth)</code></li>
+      <li><strong>Panel width:</strong> <code>Door W − (2 × Stile W) + (2 × Groove Depth) − (2 × Expansion Gap)</code> &nbsp;(height uses the same method)</li>
+    </ul>
+
+    <!-- WORKED EXAMPLE -->
+    <h3>Worked example</h3>
+    <p style="background:#020617;border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:0.86rem;">
+      18" wide door · 2¼" stiles · 3/8" groove · 1/16" expansion<br><br>
+      <code>Rail width = 18 − (2.25 × 2) + (0.375 × 2) = 14.25"</code><br>
+      <code>Panel width = 14.25 − (0.0625 × 2) = 14.125"</code>
+    </p>
+
+    <!-- JOINERY -->
+    <h3>Joinery — the four common corner profiles</h3>
+    <p>All 5-piece doors need a groove for the panel; the difference is the profile milled on the inside edge where rail meets stile.</p>
+    <figure class="diagram-fig wide">
+      <svg viewBox="0 0 560 150" xmlns="http://www.w3.org/2000/svg">
+        <!-- SQUARE / SHAKER -->
+        <g>
+          <path d="M30 30 H120 V60 H60 V120 H30 Z" fill="rgba(56,189,248,0.15)" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="60" y1="60" x2="60" y2="120" stroke="var(--text-muted)" stroke-dasharray="3 3"/>
+          <text x="70" y="145" fill="var(--text)" font-size="11" text-anchor="middle">90° / Shaker</text>
+        </g>
+        <!-- BEVEL -->
+        <g>
+          <path d="M170 30 H260 V60 L215 60 L200 120 H170 Z" fill="rgba(74,222,128,0.15)" stroke="var(--accent-green)" stroke-width="2"/>
+          <text x="212" y="145" fill="var(--text)" font-size="11" text-anchor="middle">Bevel (chamfer)</text>
+        </g>
+        <!-- OGEE -->
+        <g>
+          <path d="M310 30 H400 V60 Q360 60 355 88 T340 120 H310 Z" fill="rgba(251,191,36,0.15)" stroke="var(--accent-amber)" stroke-width="2"/>
+          <text x="352" y="145" fill="var(--text)" font-size="11" text-anchor="middle">Ogee (S-curve)</text>
+        </g>
+        <!-- RADIUS -->
+        <g>
+          <path d="M450 30 H540 V60 Q490 60 490 110 V120 H450 Z" fill="rgba(148,163,184,0.18)" stroke="var(--text-muted)" stroke-width="2"/>
+          <text x="492" y="145" fill="var(--text)" font-size="11" text-anchor="middle">Radius (roundover)</text>
+        </g>
+      </svg>
+      <figcaption>Inside-corner profile where the panel opening meets the frame.</figcaption>
+    </figure>
+    <ul>
+      <li><strong>90° / Shaker</strong> — a plain square edge with a groove. No profile bits needed; just a table saw or straight router bit, plus a tenon on the rails.</li>
+      <li><strong>Bevel, Ogee, Radius</strong> — decorative profiles cut with matched <strong>cope-and-stick router bits</strong>: one bit mills the groove &amp; profile on rails and stiles, the other cuts the matching tenon on the rail ends.</li>
+    </ul>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);">Metric mode converts every value using 1 in = 25.4 mm. Imperial shows to the nearest 1/16"; metric to the nearest 0.5 mm.</p>
+  </details>
+</div>
+
+<script>
+  const MM = 25.4;
+  let unit = 'imperial'; // internal math is always in inches
+
+  const FIELD_IDS = ['openingW','openingH','overlay','gap','frameWidth','grooveDepth','expansion'];
+
+  // ---- Fraction parsing for input fields ----
+  // Accepts: "1 3/4", "3/8", "2 1/4", "2.25", "1-3/4", ".5", or plain numbers.
+  // Returns a Number in the CURRENT display unit, or NaN if unparseable.
+  function parseField(raw) {
+    if (raw == null) return NaN;
+    let s = String(raw).trim().replace(/["”]/g, '').replace(/\s+/g, ' ');
+    if (s === '') return NaN;
+    // whole + fraction, e.g. "1 3/4" or "1-3/4"
+    let m = s.match(/^(\d+)[\s-]+(\d+)\/(\d+)$/);
+    if (m) {
+      const d = parseFloat(m[3]);
+      if (!d) return NaN;
+      return parseFloat(m[1]) + parseFloat(m[2]) / d;
+    }
+    // pure fraction, e.g. "3/8"
+    m = s.match(/^(\d+)\/(\d+)$/);
+    if (m) {
+      const d = parseFloat(m[2]);
+      if (!d) return NaN;
+      return parseFloat(m[1]) / d;
+    }
+    // plain decimal / integer
+    if (/^\d*\.?\d+$/.test(s)) return parseFloat(s);
+    return NaN;
+  }
+
+  // How a field's value (given in inches) should be shown IN THE INPUT BOX.
+  function fieldDisplay(inchVal) {
+    if (unit === 'metric') return +(inchVal * MM).toFixed(1);      // e.g. 12.7
+    return fractionString(inchVal, false);                          // e.g. "1 3/4"
+  }
+
+  // ---- Unit handling ----
+  function setUnit(u) {
+    if (u === unit) return;
+    // read current field values as inches, then re-display in the new unit
+    const inchVals = {};
+    FIELD_IDS.forEach(id => {
+      const v = parseField(document.getElementById(id).value);
+      inchVals[id] = toInches(isNaN(v) ? 0 : v);
+    });
+
+    unit = u;
+    document.querySelectorAll('#unitToggle button').forEach(b =>
+      b.classList.toggle('active', b.dataset.unit === u));
+    document.querySelectorAll('[data-suffix]').forEach(s => s.textContent = (u === 'metric' ? 'mm' : 'in'));
+
+    FIELD_IDS.forEach(id => {
+      document.getElementById(id).value = fieldDisplay(inchVals[id]);
+    });
+    calculate();
+  }
+
+  function toInches(v) { return unit === 'metric' ? v / MM : v; }
+  // Used by presets: set a field (given an inch value) to a display string.
+  function fromInches(v) { return fieldDisplay(v); }
+
+  // ---- Formatting ----
+  // Build a fraction string to the nearest 1/16", reduced (e.g. 8/16 -> 1/2).
+  // withQuote=true appends the inch mark (for result rows); false for input boxes.
+  function fractionString(valInches, withQuote) {
+    if (isNaN(valInches)) return withQuote ? '—' : '';
+    const q = withQuote ? '"' : '';
+    const sign = valInches < 0 ? "-" : "";
+    const val = Math.abs(valInches);
+    let sixteenths = Math.round(val * 16);
+    let whole = Math.floor(sixteenths / 16);
+    let num = sixteenths % 16;
+    // reduce numerator/denominator
+    let den = 16;
+    while (num !== 0 && num % 2 === 0) { num /= 2; den /= 2; }
+    if (num === 0) return `${sign}${whole}${q}`;
+    if (whole === 0) return `${sign}${num}/${den}${q}`;
+    return `${sign}${whole} ${num}/${den}${q}`;
+  }
+  function toFraction(valInches) {
+    if (isNaN(valInches)) return '—';
+    return fractionString(valInches, true);
+  }
+  function toMM(valInches) {
+    if (isNaN(valInches)) return '—';
+    return (Math.round(valInches * MM * 2) / 2).toFixed(1) + ' mm';
+  }
+  // Primary display in current unit, with the other unit as a small secondary line
+  function dim(valInches) {
+    const primary = unit === 'metric' ? toMM(valInches) : toFraction(valInches);
+    const secondary = unit === 'metric' ? toFraction(valInches) : toMM(valInches);
+    return `${primary}<span class="alt">${secondary}</span>`;
+  }
+
+  function toggleOverlayVisibility() {
+    const style = document.getElementById('style').value;
+    document.getElementById('overlayGroup').style.display = (style === 'inset') ? 'none' : 'flex';
+  }
+
+  function applyPreset(kind) {
+    const set = (id, inchVal) => document.getElementById(id).value = fromInches(inchVal);
+    if (kind === 'base') {
+      document.getElementById('style').value = 'overlay';
+      document.getElementById('doorCount').value = '1';
+      document.getElementById('panelLayout').value = 'single';
+      set('openingW', 15); set('openingH', 24); set('overlay', 0.5); set('gap', 0.125);
+    } else if (kind === 'wall') {
+      document.getElementById('style').value = 'overlay';
+      document.getElementById('doorCount').value = '2';
+      document.getElementById('panelLayout').value = 'single';
+      set('openingW', 30); set('openingH', 30); set('overlay', 0.5); set('gap', 0.125);
+    } else if (kind === 'tall') {
+      document.getElementById('style').value = 'overlay';
+      document.getElementById('doorCount').value = '2';
+      document.getElementById('panelLayout').value = 'split';
+      set('openingW', 24); set('openingH', 84); set('overlay', 0.5); set('gap', 0.125);
+    }
+    toggleOverlayVisibility();
+    calculate();
+  }
+
+  let lastCutText = '';
+
+  function calculate() {
+    const g = id => { const v = parseField(document.getElementById(id).value); return isNaN(v) ? 0 : v; };
+    const style = document.getElementById('style').value;
+    const openW = toInches(g('openingW'));
+    const openH = toInches(g('openingH'));
+    const overlay = toInches(g('overlay'));
+    const gap = toInches(g('gap'));
+    const doorCount = parseInt(document.getElementById('doorCount').value);
+    const panelLayout = document.getElementById('panelLayout').value;
+    const frameW = toInches(g('frameWidth'));
+    const groove = toInches(g('grooveDepth'));
+    const expansion = toInches(g('expansion'));
+
+    // Finished door sizes (inches)
+    let doorW, doorH;
+    if (style === 'overlay') {
+      doorW = (doorCount === 1) ? (openW + 2*overlay) : (((openW + 2*overlay) - gap) / 2);
+      doorH = openH + 2*overlay;
+    } else {
+      doorW = (doorCount === 1) ? (openW - 2*gap) : ((openW - 3*gap) / 2);
+      doorH = openH - 2*gap;
+    }
+
+    // Cut list (per door)
+    const stileL = doorH;
+    let railL = doorW - 2*frameW + 2*groove;
+    let panelW, panelH = doorH - 2*frameW + 2*groove - 2*expansion;
+    let panelQty = 1, mullionL = 0;
+
+    if (panelLayout === 'split') {
+      panelQty = 2;
+      mullionL = railL - 2*groove;
+      railL = (railL - frameW) / 2 + 2*groove;
+      panelW = railL - 2*frameW + 2*groove - 2*expansion;
+    } else {
+      panelW = doorW - 2*frameW + 2*groove - 2*expansion;
+    }
+
+    // Validation / warnings
+    const warns = [];
+    if (openW <= 0 || openH <= 0) warns.push('Enter a positive opening width and height.');
+    if (doorW <= 0) warns.push('Door width came out ≤ 0 — check your opening size, overlay, or gap.');
+    if (railL <= 0) warns.push('Rail length is ≤ 0 — the stile width may be too large for this door.');
+    if (panelW <= 0 || panelH <= 0) warns.push('Panel size is ≤ 0 — reduce stile/rail width or groove depth.');
+    if (frameW * 2 >= doorW) warns.push('Stiles overlap: two stile widths are wider than the door itself.');
+    const wb = document.getElementById('warningBox');
+    if (warns.length) { wb.classList.add('show'); wb.innerHTML = warns.join('<br>'); }
+    else wb.classList.remove('show');
+
+    // Materials (total job)
+    const totalStiles = stileL * 2 * doorCount;
+    const totalRails = railL * (panelLayout === 'split' ? 4 : 2) * doorCount;
+    const totalMullion = (panelLayout === 'split' ? mullionL : 0) * doorCount;
+    const totalLinIn = totalStiles + totalRails + totalMullion;
+    const totalLinFeet = totalLinIn / 12;
+    const totalBoardFeet = (totalLinIn * frameW) / 144;
+    const totalPanelSqFt = (panelW * panelH * panelQty * doorCount) / 144;
+    const totalPanelSqM = (panelW*MM/1000) * (panelH*MM/1000) * panelQty * doorCount;
+
+    // Hardware
+    let hingesPerDoor = 2;
+    if (doorH > 50) hingesPerDoor = 4;
+    else if (doorH > 38) hingesPerDoor = 3;
+    const totalHinges = hingesPerDoor * doorCount;
+    const totalPulls = doorCount;
+
+    // ---- Render ----
+    document.getElementById('cutListBadge').textContent = 'per door';
+    document.getElementById('finishedResults').innerHTML = `
+      <div class="output-row"><span>Single Door Width</span><strong>${dim(doorW)}</strong></div>
+      <div class="output-row"><span>Single Door Height</span><strong>${dim(doorH)}</strong></div>
+      <div class="output-row"><span>Doors in this run</span><strong>${doorCount}</strong></div>`;
+
+    document.getElementById('hardwareResults').innerHTML = `
+      <div class="output-row"><span>Hinges (${hingesPerDoor}/door)</span><strong>${totalHinges} total</strong></div>
+      <div class="output-row"><span>Pulls / Handles</span><strong>${totalPulls} total</strong></div>`;
+
+    document.getElementById('cutListResults').innerHTML = `
+      <div class="output-row"><span>2× Vertical Stiles</span><strong>${dim(stileL)} × ${dim(frameW)}</strong></div>
+      <div class="output-row"><span>${panelLayout==='split'?'4× Rails':'2× Rails'}</span><strong>${dim(railL)} × ${dim(frameW)}</strong></div>
+      ${panelLayout==='split' ? `<div class="output-row"><span>1× Center Mullion</span><strong>${dim(mullionL)} × ${dim(frameW)}</strong></div>` : ''}
+      <div class="output-row"><span>${panelQty}× Center Panel(s)</span><strong>${dim(panelW)} × ${dim(panelH)}</strong></div>`;
+
+    document.getElementById('materialResults').innerHTML = `
+      <div class="output-row"><span>Frame stock (+15% waste)</span><strong>${(totalLinFeet*1.15).toFixed(1)} ft<span class="alt">${(totalLinIn*1.15*MM/1000).toFixed(2)} m</span></strong></div>
+      <div class="output-row"><span>Board feet (4/4 stock)</span><strong>${(totalBoardFeet*1.15).toFixed(2)} BF</strong></div>
+      <div class="output-row"><span>Panel material area</span><strong>${totalPanelSqFt.toFixed(2)} sq ft<span class="alt">${totalPanelSqM.toFixed(3)} m²</span></strong></div>`;
+
+    // plain-text version for copy
+    const line = (l, r) => `${l}: ${r}`;
+    const cleanDim = v => unit === 'metric'
+      ? `${toMM(v)} (${toFraction(v)})`
+      : `${toFraction(v)} (${toMM(v)})`;
+    lastCutText = [
+      'CABINET DOOR CUT LIST',
+      line('Style', style + ', ' + doorCount + ' door(s), ' + panelLayout + ' panel'),
+      line('Finished door', `${cleanDim(doorW)} W × ${cleanDim(doorH)} H`),
+      '',
+      'PER DOOR:',
+      line('2x Stiles', `${cleanDim(stileL)} × ${cleanDim(frameW)}`),
+      line(`${panelLayout==='split'?'4x':'2x'} Rails`, `${cleanDim(railL)} × ${cleanDim(frameW)}`),
+      panelLayout==='split' ? line('1x Mullion', `${cleanDim(mullionL)} × ${cleanDim(frameW)}`) : null,
+      line(`${panelQty}x Panel(s)`, `${cleanDim(panelW)} × ${cleanDim(panelH)}`),
+      '',
+      'MATERIALS (total, +15% waste):',
+      line('Frame stock', `${(totalLinFeet*1.15).toFixed(1)} ft`),
+      line('Board feet', `${(totalBoardFeet*1.15).toFixed(2)} BF`),
+      line('Panel area', `${totalPanelSqFt.toFixed(2)} sq ft`),
+    ].filter(Boolean).join('\n');
+
+    renderSVG(doorCount, panelLayout);
+  }
+
+  async function copyResults() {
+    try {
+      await navigator.clipboard.writeText(lastCutText);
+      flashCopied();
+    } catch (e) {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = lastCutText; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      flashCopied();
+    }
+  }
+  function flashCopied() {
+    const btn = [...document.querySelectorAll('.ghost-btn')].find(b => b.textContent.includes('Copy'));
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = orig, 1400);
+  }
+
+  function renderSVG(doors, layout) {
+    const svg = document.getElementById('doorSVG');
+    svg.innerHTML = '';
+    if (doors === 1) drawDoor(svg, 90, 15, 140, 210, layout);
+    else { drawDoor(svg, 25, 15, 130, 210, layout); drawDoor(svg, 165, 15, 130, 210, layout); }
+  }
+  function drawDoor(svg, x, y, w, h, layout) {
+    const frame = 18, ns = "http://www.w3.org/2000/svg";
+    const mk = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; };
+    mk("rect", {x, y, width:w, height:h, fill:"#1e293b", stroke:"#38bdf8", "stroke-width":2, rx:3});
+    if (layout === 'single') {
+      mk("rect", {x:x+frame, y:y+frame, width:w-2*frame, height:h-2*frame, fill:"#0f172a", stroke:"#94a3b8"});
+    } else {
+      const midW = (w - 3*frame) / 2;
+      mk("rect", {x:x+frame, y:y+frame, width:midW, height:h-2*frame, fill:"#0f172a", stroke:"#94a3b8"});
+      mk("rect", {x:x+2*frame+midW, y:y+frame, width:midW, height:h-2*frame, fill:"#0f172a", stroke:"#94a3b8"});
+    }
+  }
+
+  const isDimField = el => FIELD_IDS.includes(el.id);
+
+  // Live recalculation on any input change
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', () => {
+      if (isDimField(el)) {
+        const v = parseField(el.value);
+        el.classList.toggle('invalid', el.value.trim() !== '' && (isNaN(v) || v < 0));
+      }
+      calculate();
+    });
+  });
+
+  // On blur, tidy a valid entry into a clean fraction (imperial) or 1-decimal mm (metric).
+  // e.g. "0.5" -> "1/2", "1.75" -> "1 3/4", "12.70" -> "12.7"
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('blur', () => {
+      const v = parseField(el.value);
+      if (isNaN(v) || v < 0) return;               // leave invalid text for the user to fix
+      el.value = fieldDisplay(toInches(v));        // fieldDisplay expects inches
+      el.classList.remove('invalid');
+      calculate();
+    });
+  });
+
+  // Normalize the initial default values into fractions on load.
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    const v = parseField(el.value);
+    if (!isNaN(v)) el.value = fieldDisplay(toInches(v));
+  });
+
+  // Step a field up/down by its natural increment (1/16" or 1/32" imperial; 0.5 mm metric).
+  function stepField(id, dir) {
+    const el = document.getElementById(id);
+    let cur = parseField(el.value);
+    if (isNaN(cur)) cur = 0;
+    let inches = toInches(cur);
+    const impStep = (id === 'gap' || id === 'expansion') ? 1/32 : 1/16;
+    const stepInches = unit === 'metric' ? (0.5 / MM) : impStep;
+    inches = Math.max(0, inches + dir * stepInches);
+    // snap to the step grid to avoid float drift
+    inches = Math.round(inches / stepInches) * stepInches;
+    el.value = fieldDisplay(inches);
+    el.classList.remove('invalid');
+    calculate();
+  }
+
+  // Inject − / + stepper buttons around each dimension input.
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    const wrap = el.parentElement; // .input-wrap
+    const minus = document.createElement('button');
+    minus.type = 'button'; minus.className = 'stepper'; minus.textContent = '−';
+    minus.setAttribute('aria-label', 'decrease');
+    minus.addEventListener('click', () => stepField(id, -1));
+    const plus = document.createElement('button');
+    plus.type = 'button'; plus.className = 'stepper'; plus.textContent = '+';
+    plus.setAttribute('aria-label', 'increase');
+    plus.addEventListener('click', () => stepField(id, +1));
+    wrap.insertBefore(minus, el);      // − [input] + suffix
+    el.insertAdjacentElement('afterend', plus);
+    // Arrow keys also step
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp') { e.preventDefault(); stepField(id, +1); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); stepField(id, -1); }
+    });
+  });
+
+  toggleOverlayVisibility();
+  calculate();
+</script>
+
+</body>
+</html>
