@@ -323,6 +323,7 @@
       </div>
       <button class="ghost-btn" onclick="copyResults()">Copy Cut List</button>
       <button class="ghost-btn" onclick="window.print()">Print</button>
+      <button class="ghost-btn" onclick="resetAll()">Reset</button>
     </div>
   </div>
 
@@ -338,22 +339,23 @@
       <h2>1. Opening &amp; Style</h2>
       <div class="input-group">
         <label>Cabinet Style
-          <span class="help" data-tip="Overlay doors sit on top of the frame. Inset doors sit flush inside the opening.">?</span>
+          <span class="help" data-tip="Overlay doors sit on top of the frame. Inset doors sit flush inside the opening. Frameless (Euro/32mm) doors mount directly to the cabinet box — no face frame.">?</span>
         </label>
         <select id="style" onchange="toggleOverlayVisibility(); calculate()">
           <option value="overlay">Overlay</option>
           <option value="inset">Inset</option>
+          <option value="frameless">Frameless (Euro / 32mm)</option>
         </select>
       </div>
       <div class="input-group">
-        <label>Opening Width</label>
+        <label id="openingWLabel">Opening Width</label>
         <div class="input-wrap">
           <input type="text" inputmode="decimal" id="openingW" value="30" min="0" autocomplete="off" spellcheck="false">
           <span class="unit-suffix" data-suffix>in</span>
         </div>
       </div>
       <div class="input-group">
-        <label>Opening Height</label>
+        <label id="openingHLabel">Opening Height</label>
         <div class="input-wrap">
           <input type="text" inputmode="decimal" id="openingH" value="36" min="0" autocomplete="off" spellcheck="false">
           <span class="unit-suffix" data-suffix>in</span>
@@ -369,8 +371,8 @@
         </div>
       </div>
       <div class="input-group">
-        <label>Gap / Clearance
-          <span class="help" data-tip="Center gap between a pair of doors, or the reveal around inset doors.">?</span>
+        <label><span id="gapLabel">Gap / Clearance</span>
+          <span class="help" id="gapHelp" data-tip="Center gap between a pair of doors, or the reveal around inset doors.">?</span>
         </label>
         <div class="input-wrap">
           <input type="text" inputmode="decimal" id="gap" value="0.125" min="0" autocomplete="off" spellcheck="false">
@@ -428,6 +430,32 @@
           <option value="0.75">3/4in Plywood/MDF (raised panel)</option>
         </select>
       </div>
+
+      <h2>4. Drawer Fronts
+        <span class="help" data-tip="Drawer fronts are calculated as flat slab panels (standard practice), spanning the full opening width. Set to None to skip.">?</span>
+      </h2>
+      <div class="input-group">
+        <label>Number of Drawer Fronts</label>
+        <select id="drawerCount" onchange="toggleDrawerVisibility(); calculate()">
+          <option value="0" selected>None</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+      <div class="input-group" id="drawerHeightGroup" style="display:none;">
+        <label>Drawer Bank Opening Height
+          <span class="help" data-tip="The combined opening height for the whole drawer stack (measured the same way as the door opening above), before overlay/reveal is applied.">?</span>
+        </label>
+        <div class="input-wrap">
+          <input type="text" inputmode="decimal" id="drawerOpeningH" value="24" min="0" autocomplete="off" spellcheck="false">
+          <span class="unit-suffix" data-suffix>in</span>
+        </div>
+      </div>
+
       <p style="font-size:0.78rem;color:var(--text-muted);margin:12px 0 0;">Results update automatically as you type.</p>
     </div>
 
@@ -448,6 +476,11 @@
       <div class="card">
         <h2>Shaker Cut List <span class="badge" id="cutListBadge">per door</span></h2>
         <div id="cutListResults"></div>
+      </div>
+
+      <div class="card" id="drawerCard" style="display:none;">
+        <h2>Drawer Fronts <span class="badge">slab</span></h2>
+        <div id="drawerResults"></div>
       </div>
 
       <div class="card">
@@ -592,6 +625,21 @@
       <li><strong>Bevel, Ogee, Radius</strong> — decorative profiles cut with matched <strong>cope-and-stick router bits</strong>: one bit mills the groove &amp; profile on rails and stiles, the other cuts the matching tenon on the rail ends.</li>
     </ul>
 
+    <!-- FRAMELESS -->
+    <h3>Frameless (Euro / 32mm) cabinets</h3>
+    <p>Frameless cabinets have <strong>no face frame</strong> — the door mounts straight onto the box (carcass) side panels using concealed 32mm-system hinges. Because there's no frame to overlay or sit inside of, the measurement logic is closer to <em>Inset</em>: you measure the <strong>outer cabinet box</strong> dimensions, and the door is sized just <em>slightly smaller</em> than the box, leaving a small reveal gap all around and between paired doors.</p>
+    <ul>
+      <li><strong>Cabinet Box Width / Height</strong> — the outer dimensions of the box (side panel to side panel, top to bottom), not an inside frame opening.</li>
+      <li><strong>Reveal Gap</strong> — the gap between the door edge and the box edge, between a pair of doors, and between stacked drawer fronts. Typically <strong>1/16"–1/8" (1.5–3 mm)</strong>.</li>
+      <li><strong>Door W = Box W − (2 × Reveal)</strong>, same formula the app uses for Inset — just applied to the box instead of a frame opening.</li>
+      <li>Hinges are concealed cup hinges bored into the door's back (usually 35mm cup), screwed to a mounting plate on the box side — different hardware than framed-cabinet butt/partial-overlay hinges.</li>
+    </ul>
+    <p>Select <strong>Frameless (Euro / 32mm)</strong> under Cabinet Style to switch the width/height/gap fields to this mode. 5-piece Shaker doors work fine on frameless boxes — very common combination in modern kitchens — only the outer sizing math changes, not the door construction.</p>
+
+    <!-- DRAWER FRONTS -->
+    <h3>Drawer fronts</h3>
+    <p>Drawer fronts are calculated as <strong>flat slab panels</strong> (the standard approach — most drawer fronts, including in Shaker kitchens, are too short for a rail/stile/groove assembly). Set <strong>Number of Drawer Fronts</strong> and the <strong>Drawer Bank Opening Height</strong> to size a stack: the app applies the same overlay/inset/frameless formula to get the outer stack size, then splits it evenly across the fronts with a reveal gap between each one. Drawer front width always spans the full opening, matching the door(s) below it. Slab area is added to the sheet goods estimate; hardware adds one pair of slides per drawer.</p>
+
     <p style="font-size:0.8rem;color:var(--text-muted);">Metric mode converts every value using 1 in = 25.4 mm. Imperial shows to the nearest 1/16"; metric to the nearest 0.5 mm.</p>
   </details>
 </div>
@@ -600,7 +648,7 @@
   const MM = 25.4;
   let unit = 'imperial'; // internal math is always in inches
 
-  const FIELD_IDS = ['openingW','openingH','overlay','gap','frameWidth','grooveDepth','expansion'];
+  const FIELD_IDS = ['openingW','openingH','overlay','gap','frameWidth','grooveDepth','expansion','drawerOpeningH'];
 
   // ---- Fraction parsing for input fields ----
   // Accepts: "1 3/4", "3/8", "2 1/4", "2.25", "1-3/4", ".5", or plain numbers.
@@ -694,7 +742,28 @@
 
   function toggleOverlayVisibility() {
     const style = document.getElementById('style').value;
-    document.getElementById('overlayGroup').style.display = (style === 'inset') ? 'none' : 'flex';
+    document.getElementById('overlayGroup').style.display = (style === 'inset' || style === 'frameless') ? 'none' : 'flex';
+    const frameless = style === 'frameless';
+    document.getElementById('openingWLabel').textContent = frameless ? 'Cabinet Box Width' : 'Opening Width';
+    document.getElementById('openingHLabel').textContent = frameless ? 'Cabinet Box Height' : 'Opening Height';
+    document.getElementById('gapLabel').textContent = frameless ? 'Reveal Gap' : 'Gap / Clearance';
+    document.getElementById('gapHelp').setAttribute('data-tip', frameless
+      ? 'Gap between the door and the cabinet box edge, between paired doors, and between stacked drawer fronts. Typical 1/16"–1/8" (1.5–3 mm).'
+      : 'Center gap between a pair of doors, or the reveal around inset doors.');
+  }
+
+  function toggleDrawerVisibility() {
+    const n = parseInt(document.getElementById('drawerCount').value) || 0;
+    document.getElementById('drawerHeightGroup').style.display = n > 0 ? 'flex' : 'none';
+    document.getElementById('drawerCard').style.display = n > 0 ? '' : 'none';
+  }
+
+  function resetAll() {
+    ['openingW','openingH','overlay','gap','frameWidth','grooveDepth','expansion','drawerOpeningH']
+      .forEach(id => document.getElementById(id).value = '0');
+    document.getElementById('drawerCount').value = '0';
+    toggleDrawerVisibility();
+    calculate();
   }
 
   function applyPreset(kind) {
@@ -759,6 +828,18 @@
       panelW = doorW - 2*frameW + 2*groove - 2*expansion;
     }
 
+    // Drawer fronts (flat slab panels, spanning the full opening width)
+    const drawerCount = parseInt(document.getElementById('drawerCount').value) || 0;
+    let drawerFrontW = 0, drawerFrontH = 0, totalDrawerSqFt = 0;
+    if (drawerCount > 0) {
+      const drawerOpenH = toInches(g('drawerOpeningH'));
+      const bankW = (style === 'overlay') ? (openW + 2*overlay) : (openW - 2*gap);
+      const bankH = (style === 'overlay') ? (drawerOpenH + 2*overlay) : (drawerOpenH - 2*gap);
+      drawerFrontW = bankW;
+      drawerFrontH = (bankH - (drawerCount - 1) * gap) / drawerCount;
+      totalDrawerSqFt = (drawerFrontW * drawerFrontH * drawerCount) / 144;
+    }
+
     // Validation / warnings
     const warns = [];
     if (openW <= 0 || openH <= 0) warns.push('Enter a positive opening width and height.');
@@ -766,6 +847,8 @@
     if (railL <= 0) warns.push('Rail length is ≤ 0 — the stile width may be too large for this door.');
     if (panelW <= 0 || panelH <= 0) warns.push('Panel size is ≤ 0 — reduce stile/rail width or groove depth.');
     if (frameW * 2 >= doorW) warns.push('Stiles overlap: two stile widths are wider than the door itself.');
+    if (drawerCount > 0 && drawerFrontW <= 0) warns.push('Drawer front width came out ≤ 0 — check the opening width, overlay, or gap.');
+    if (drawerCount > 0 && drawerFrontH <= 0) warns.push('Drawer front height came out ≤ 0 — reduce drawer count or check the drawer opening height.');
     const wb = document.getElementById('warningBox');
     if (warns.length) { wb.classList.add('show'); wb.innerHTML = warns.join('<br>'); }
     else wb.classList.remove('show');
@@ -780,10 +863,10 @@
     const totalPanelSqFt = (panelW * panelH * panelQty * doorCount) / 144;
     const totalPanelSqM = (panelW*MM/1000) * (panelH*MM/1000) * panelQty * doorCount;
     const panelThickness = parseFloat(document.getElementById('panelThickness').value);
-    // ponytail: area-based sheet count (total panel area ÷ usable sheet area), not a real nesting/layout solver.
+    // ponytail: area-based sheet count (total panel + drawer front area ÷ usable sheet area), not a real nesting/layout solver.
     // Fine for small door panels; upgrade to a bin-packing layout if panels start running close to sheet width/length.
     const SHEET_SQFT = 32; // 4x8 ft sheet
-    const sheetsNeeded = Math.ceil((totalPanelSqFt * 1.15) / SHEET_SQFT);
+    const sheetsNeeded = Math.ceil(((totalPanelSqFt + totalDrawerSqFt) * 1.15) / SHEET_SQFT);
 
     // Hardware
     let hingesPerDoor = 2;
@@ -801,7 +884,14 @@
 
     document.getElementById('hardwareResults').innerHTML = `
       <div class="output-row"><span>Hinges (${hingesPerDoor}/door)</span><strong>${totalHinges} total</strong></div>
-      <div class="output-row"><span>Pulls / Handles</span><strong>${totalPulls} total</strong></div>`;
+      <div class="output-row"><span>Pulls / Handles</span><strong>${totalPulls} total</strong></div>
+      ${drawerCount > 0 ? `<div class="output-row"><span>Drawer Slides (1 pair/drawer)</span><strong>${drawerCount} pair${drawerCount===1?'':'s'}</strong></div>` : ''}`;
+
+    toggleDrawerVisibility();
+    if (drawerCount > 0) {
+      document.getElementById('drawerResults').innerHTML =
+        `<div class="output-row"><span>${drawerCount}× Drawer Front (slab)</span><strong>${dim(drawerFrontW)} × ${dim(drawerFrontH)}</strong></div>`;
+    }
 
     document.getElementById('cutListResults').innerHTML = `
       <div class="output-row"><span>2× Vertical Stiles</span><strong>${dim(stileL)} × ${dim(frameW)}</strong></div>
@@ -813,6 +903,7 @@
       <div class="output-row"><span>Frame stock (+15% waste)</span><strong>${(totalLinFeet*1.15).toFixed(1)} ft<span class="alt">${(totalLinIn*1.15*MM/1000).toFixed(2)} m</span></strong></div>
       <div class="output-row"><span>Board feet (4/4 stock)</span><strong>${(totalBoardFeet*1.15).toFixed(2)} BF</strong></div>
       <div class="output-row"><span>Panel material area</span><strong>${totalPanelSqFt.toFixed(2)} sq ft<span class="alt">${totalPanelSqM.toFixed(3)} m²</span></strong></div>
+      ${drawerCount > 0 ? `<div class="output-row"><span>Drawer front area</span><strong>${totalDrawerSqFt.toFixed(2)} sq ft</strong></div>` : ''}
       <div class="output-row"><span>Sheet goods (4×8 ft, ${dim(panelThickness)})</span><strong>${sheetsNeeded} sheet${sheetsNeeded===1?'':'s'}</strong></div>`;
 
     // plain-text version for copy
@@ -835,6 +926,8 @@
       line('Frame stock', `${(totalLinFeet*1.15).toFixed(1)} ft`),
       line('Board feet', `${(totalBoardFeet*1.15).toFixed(2)} BF`),
       line('Panel area', `${totalPanelSqFt.toFixed(2)} sq ft`),
+      drawerCount > 0 ? line(`${drawerCount}x Drawer Front(s)`, `${cleanDim(drawerFrontW)} × ${cleanDim(drawerFrontH)}`) : null,
+      drawerCount > 0 ? line('Drawer front area', `${totalDrawerSqFt.toFixed(2)} sq ft`) : null,
       line(`Sheet goods (4x8ft, ${cleanDim(panelThickness)})`, `${sheetsNeeded} sheet${sheetsNeeded===1?'':'s'}`),
     ].filter(Boolean).join('\n');
 
