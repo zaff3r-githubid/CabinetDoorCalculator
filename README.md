@@ -18,9 +18,10 @@ To keep it handy, bookmark the opened file or add it to your home screen.
 
 1. Tap a **preset** at the top of the input panel (e.g. *Wall pair*) to load a typical setup, or skip this and enter your own numbers.
 2. Type your **Opening Width** and **Opening Height** (measured inside the cabinet frame).
-3. Pick your **Cabinet Style** (Overlay or Inset) and **Number of Doors**.
+3. Pick your **Cabinet Style** (Overlay, Inset, or Frameless) and **Number of Doors**.
 4. Read the results on the right — they update **as you type**. No calculate button to press.
 5. Hit **Copy Cut List** to send the numbers to your phone, or **Print** for a shop copy.
+6. Hit **Reset** to zero out every dimension field and start a new door from scratch.
 
 ---
 
@@ -62,10 +63,10 @@ If you type something that can't be read, the field outlines in red and a warnin
 
 ### 1. Opening & Style
 
-- **Cabinet Style** — *Overlay* doors sit on top of the frame; *Inset* doors sit flush inside the opening. (When you pick Inset, the Overlay field hides automatically.)
-- **Opening Width / Height** — the **inside clear opening** of the face frame, not the outside of the cabinet. Measure at both top & bottom (and both sides) and use the **smaller** reading if the frame is out of square.
+- **Cabinet Style** — *Overlay* doors sit on top of the frame; *Inset* doors sit flush inside the opening; *Frameless (Euro/32mm)* doors mount straight to the cabinet box, no face frame. (Picking Inset or Frameless hides the Overlay field, and the Opening/Gap labels relabel to Cabinet Box Width/Height and Reveal Gap for Frameless.)
+- **Opening Width / Height** (or **Cabinet Box Width / Height** in Frameless mode) — the **inside clear opening** of the face frame for Overlay/Inset, or the **outer box dimensions** for Frameless. Measure at both top & bottom (and both sides) and use the **smaller** reading if the frame is out of square.
 - **Overlay (per side)** — how far each door edge covers the frame. ~1/2" is common for partial overlay.
-- **Gap / Clearance** — the center gap between a pair of doors, or the reveal around inset doors.
+- **Gap / Clearance** (or **Reveal Gap** in Frameless mode) — the center gap between a pair of doors, the reveal around inset doors, or the reveal between a frameless door and the box edge / between stacked drawer fronts. Typically 1/16"–1/8".
 
 ### 2. Door Configuration
 
@@ -77,15 +78,22 @@ If you type something that can't be read, the field outlines in red and a warnin
 - **Stile / Rail Width** — the width of the door's frame boards (e.g. 2 1/4").
 - **Groove Depth** — how deep the panel groove is cut into rails and stiles.
 - **Expansion Gap** — small clearance so the panel can swell with humidity without cracking the frame. Keep it small (~1/16").
+- **Panel Material** — pick the panel stock thickness: 1/4" plywood/MDF for a standard flat (floating) panel, or 3/4" for a raised panel (raised profiles need the extra depth to shape — 1/2" usually isn't thick enough to raise).
+
+### 4. Drawer Fronts
+
+- **Number of Drawer Fronts** — set to *None* to skip, or 1–6 to size a stack of flat slab drawer fronts spanning the same opening width as the doors above.
+- **Drawer Bank Opening Height** — the combined opening height for the whole drawer stack, measured the same way as the door opening. The app applies your Cabinet Style's overlay/inset/frameless formula to it, then splits the result evenly across the fronts with a reveal gap between each.
 
 ---
 
 ## Reading the results
 
 - **Finished Door Dimensions** — the outside size of each finished door, plus how many doors are in the run.
-- **Hardware Needed** — hinge count (auto-scales with door height: 2, 3, or 4 per door) and pulls/handles.
+- **Hardware Needed** — hinge count (auto-scales with door height: 2, 3, or 4 per door), pulls/handles, and drawer slides (1 pair per drawer front, if any are set).
 - **Shaker Cut List (per door)** — sizes for the 2 stiles, rails, optional center mullion, and panel(s). These are your actual cut dimensions.
-- **Material Estimate (total job)** — linear feet of frame stock (with 15% waste added), board feet of 4/4 lumber, and panel material area.
+- **Drawer Fronts** — shown only when Number of Drawer Fronts > 0: each slab front's finished width × height.
+- **Material Estimate (total job)** — linear feet of frame stock (with 15% waste added), board feet of 4/4 lumber, panel material area, drawer front area (if any), and a **sheet goods** count — how many 4×8 ft sheets of plywood/MDF to buy, based on total panel + drawer front area with 15% waste (area-based estimate, not a cut-layout/nesting plan).
 - **Visual Scale Layout** — a simple scaled drawing of the door(s) and panel arrangement.
 
 ---
@@ -102,10 +110,11 @@ Load a preset, then adjust any field to fit your project.
 
 ---
 
-## Copy & Print
+## Copy, Print & Reset
 
 - **Copy Cut List** copies a clean, plain-text version of the cut list and materials (with both units shown) to your clipboard — paste it into a text, email, or notes app.
 - **Print** opens your browser's print dialog with a light, ink-friendly layout that drops the dark background and on-screen controls.
+- **Reset** zeroes out every dimension field (opening/box size, overlay, gap, stile width, groove, expansion, drawer height) and sets Drawer Fronts back to None — a clean slate for starting a new door. It won't touch your Cabinet Style, Door Count, Panel Layout, or Panel Material selections.
 
 ---
 
@@ -117,7 +126,9 @@ Scroll to the bottom of the app and expand **Cabinet door guide & reference** fo
 - the four door styles (inset, lipped, partial overlay, full overlay) and how each fits the opening,
 - how to measure the opening,
 - all the formulas plus a worked example,
-- the four common corner joint profiles (90°/Shaker, bevel, ogee, radius).
+- the four common corner joint profiles (90°/Shaker, bevel, ogee, radius),
+- how frameless (Euro/32mm) cabinet sizing differs from framed, and
+- how drawer front sizing works.
 
 ---
 
@@ -126,10 +137,19 @@ Scroll to the bottom of the app and expand **Cabinet door guide & reference** fo
 **Finished door size**
 
 ```
-Overlay, single:  Door W = Opening W + (2 × Overlay)
-                  Door H = Opening H + (2 × Overlay)
-Overlay, pair:    Door W = [(Opening W + 2×Overlay) − Center Gap] ÷ 2
-Inset, single:    Door W = Opening W − (2 × Clearance)
+Overlay, single:    Door W = Opening W + (2 × Overlay)
+                    Door H = Opening H + (2 × Overlay)
+Overlay, pair:      Door W = [(Opening W + 2×Overlay) − Center Gap] ÷ 2
+Inset, single:      Door W = Opening W − (2 × Clearance)
+Frameless, single:  Door W = Box W − (2 × Reveal)   (same formula as Inset, applied to the box)
+```
+
+**Drawer front size (per stack)**
+
+```
+Bank W/H = same style formula as above, applied to the drawer opening
+Each front H = (Bank H − (Count − 1) × Reveal) ÷ Count
+Front W = Bank W (spans the full opening)
 ```
 
 **Cut list (per door)**
@@ -158,7 +178,7 @@ Unit conversion uses **1 inch = 25.4 mm**.
 
 - **Single file, no dependencies.** Plain HTML, CSS, and JavaScript. No build step, no frameworks, no network calls.
 - **Works offline.** Once the file is on your device, it runs with no connection.
-- **Your data stays local.** Nothing is uploaded or saved anywhere; refreshing the page resets to defaults.
+- **Your data stays local.** Nothing is uploaded or saved anywhere; refreshing the page restores the original defaults (the in-app **Reset** button instead zeroes every field, for starting a new door without reloading).
 
 ---
 
